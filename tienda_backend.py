@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'tu_clave_secreta_super_segura_2024'
+app.secret_key = os.environ.get('SECRET_KEY', 'una_clave_de_respaldo_para_desarrollo_local')
 CORS(app)
 
 # Configuración de la tienda
