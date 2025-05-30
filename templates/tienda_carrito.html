@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras - {{ config.nombre }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .item-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            transition: all 0.3s ease;
+        }
+        .btn-whatsapp:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+        }
+        .btn-eliminar {
+            transition: all 0.3s ease;
+        }
+        .btn-eliminar:hover {
+            transform: scale(1.1);
+        }
+        .empty-cart {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <button onclick="volverAtras()" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-shopping-cart text-white text-2xl"></i>
+                        <h1 class="text-2xl font-bold text-white">Carrito de Compras</h1>
+                    </div>
+                </div>
+                <div class="text-white">
+                    <span id="total-items" class="text-sm">0 productos</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido del Carrito -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Carrito Vacío -->
+        <div id="carrito-vacio" class="empty-cart text-center py-16 hidden">
+            <div class="max-w-md mx-auto">
+                <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-6"></i>
+                <h2 class="text-2xl font-bold text-gray-700 mb-4">Tu carrito está vacío</h2>
+                <p class="text-gray-500 mb-8">Agrega algunos productos para continuar con tu compra</p>
+                <button onclick="volverAtras()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
+                    <i class="fas fa-store mr-2"></i>
+                    Continuar Comprando
+                </button>
+            </div>
+        </div>
+
+        <!-- Items del Carrito -->
+        <div id="carrito-contenido" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Lista de Productos -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+                            <i class="fas fa-list mr-2 text-blue-500"></i>
+                            Productos en tu carrito
+                        </h3>
+                        <div id="carrito-items" class="space-y-4">
+                            <!-- Los items se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen y Checkout -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-4">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800 flex items-center">
+                            <i class="fas fa-receipt mr-2 text-green-500"></i>
+                            Resumen de Compra
+                        </h3>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between text-gray-600">
+                                <span>Subtotal:</span>
+                                <span id="subtotal">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Productos:</span>
+                                <span id="total-productos">0</span>
+                            </div>
+                            <hr class="border-gray-200">
+                            <div class="flex justify-between text-xl font-bold text-gray-800">
+                                <span>Total:</span>
+                                <span id="total-final">$0.00 {{ config.moneda }}</span>
+                            </div>
+                        </div>
+
+                        <button id="btn-whatsapp" onclick="enviarAWhatsApp()" 
+                                class="btn-whatsapp w-full text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center space-x-2 mb-4">
+                            <i class="fab fa-whatsapp text-xl"></i>
+                            <span>Continuar en WhatsApp</span>
+                        </button>
+
+                        <div class="text-center">
+                            <button onclick="limpiarCarrito()" 
+                                    class="text-red-500 hover:text-red-700 font-semibold transition-colors">
+                                <i class="fas fa-trash mr-1"></i>
+                                Limpiar Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <span class="text-gray-700">Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Notificaciones -->
+    <div id="notification" class="fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="notification-text">Operación exitosa</span>
+        </div>
+    </div>
+
+    <script>
+        let carritoData = { items: [], total: 0, count: 0 };
+
+        // Función para mostrar notificaciones
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            notificationText.textContent = mensaje;
+            notification.className = `fixed top-20 right-4 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+                tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            
+            notification.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+            }, 3000);
+        }
+
+        // Función para mostrar loading
+        function mostrarLoading(mostrar = true) {
+            const loading = document.getElementById('loading');
+            if (mostrar) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Función para cargar el carrito
+        async function cargarCarrito() {
+            mostrarLoading(true);
+            try {
+                const response = await fetch('/api/carrito');
+                carritoData = await response.json();
+                renderizarCarrito();
+            } catch (error) {
+                console.error('Error al cargar carrito:', error);
+                mostrarNotificacion('Error al cargar el carrito', 'error');
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+
+        // Función para renderizar el carrito
+        function renderizarCarrito() {
+            const carritoVacio = document.getElementById('carrito-vacio');
+            const carritoContenido = document.getElementById('carrito-contenido');
+            const carritoItems = document.getElementById('carrito-items');
+
+            if (carritoData.items.length === 0) {
+                carritoVacio.classList.remove('hidden');
+                carritoContenido.classList.add('hidden');
+                return;
+            }
+
+            carritoVacio.classList.add('hidden');
+            carritoContenido.classList.remove('hidden');
+
+            // Renderizar items
+            carritoItems.innerHTML = carritoData.items.map(item => `
+                <div class="item-card flex items-center space-x-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <img src="${item.imagen}" alt="${item.nombre}" class="w-20 h-20 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-800">${item.nombre}</h4>
+                        <p class="text-green-600 font-bold">${item.precio.toFixed(2)} ${carritoData.moneda || 'MXN'}</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="actualizarCantidad(${item.id}, ${item.cantidad - 1})" 
+                                class="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center transition-colors">
+                            <i class="fas fa-minus text-sm"></i>
+                        </button>
+                        <span class="font-semibold text-lg w-8 text-center">${item.cantidad}</span>
+                        <button onclick="actualizarCantidad(${item.id}, ${item.cantidad + 1})" 
+                                class="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center transition-colors">
+                            <i class="fas fa-plus text-sm"></i>
+                        </button>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-gray-800">${(item.precio * item.cantidad).toFixed(2)}</p>
+                        <button onclick="eliminarDelCarrito(${item.id})" 
+                                class="btn-eliminar text-red-500 hover:text-red-700 mt-2 transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Actualizar totales
+            document.getElementById('subtotal').textContent = `${carritoData.total.toFixed(2)}`;
+            document.getElementById('total-final').textContent = `${carritoData.total.toFixed(2)} ${carritoData.moneda || 'MXN'}`;
+            document.getElementById('total-productos').textContent = `${carritoData.count}`;
+            document.getElementById('total-items').textContent = `${carritoData.count} producto${carritoData.count !== 1 ? 's' : ''}`;
+        }
+
+        // Función para actualizar cantidad
+        async function actualizarCantidad(productoId, nuevaCantidad) {
+            if (nuevaCantidad < 0) return;
+            
+            mostrarLoading(true);
+            try {
+                const response = await fetch('/api/actualizar-carrito', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        producto_id: productoId,
+                        cantidad: nuevaCantidad
+                    })
+                });
+
+                if (response.ok) {
+                    await cargarCarrito();
+                    mostrarNotificacion('Cantidad actualizada');
+                } else {
+                    mostrarNotificacion('Error al actualizar cantidad', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+
+        // Función para eliminar del carrito
+        async function eliminarDelCarrito(productoId) {
+            mostrarLoading(true);
+            try {
+                const response = await fetch(`/api/eliminar-carrito/${productoId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    await cargarCarrito();
+                    mostrarNotificacion('Producto eliminado del carrito');
+                } else {
+                    mostrarNotificacion('Error al eliminar producto', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+
+        // Función para limpiar carrito
+        async function limpiarCarrito() {
+            if (!confirm('¿Estás seguro de que quieres vaciar el carrito?')) return;
+            
+            mostrarLoading(true);
+            try {
+                const response = await fetch('/api/limpiar-carrito', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    await cargarCarrito();
+                    mostrarNotificacion('Carrito limpiado');
+                } else {
+                    mostrarNotificacion('Error al limpiar carrito', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+
+        // Función para enviar a WhatsApp
+        function enviarAWhatsApp() {
+            if (carritoData.items.length === 0) {
+                mostrarNotificacion('El carrito está vacío', 'error');
+                return;
+            }
+
+            let mensaje = '¡Hola! Me interesa hacer un pedido:\n\n';
+            mensaje += '📦 *PRODUCTOS:*\n';
+            
+            carritoData.items.forEach((item, index) => {
+                mensaje += `${index + 1}. *${item.nombre}*\n`;
+                mensaje += `   💰 Precio: ${item.precio.toFixed(2)}\n`;
+                mensaje += `   📊 Cantidad: ${item.cantidad}\n`;
+                mensaje += `   💯 Subtotal: ${(item.precio * item.cantidad).toFixed(2)}\n\n`;
+            });
+
+            mensaje += `💰 *TOTAL: ${carritoData.total.toFixed(2)} {{ config.moneda }}*\n\n`;
+            mensaje += '¿Podrías confirmar la disponibilidad y el proceso de entrega?';
+
+            const numeroWhatsApp = '{{ config.whatsapp }}';
+            const numeroLimpio = numeroWhatsApp.replace(/[^0-9]/g, '');
+            const mensajeCodificado = encodeURIComponent(mensaje);
+            const urlWhatsApp = `https://wa.me/${numeroLimpio}?text=${mensajeCodificado}`;
+            
+            window.open(urlWhatsApp, '_blank');
+        }
+
+        // Función para volver atrás
+        function volverAtras() {
+            window.location.href = '/';
+        }
+
+        // Cargar carrito al iniciar
+        document.addEventListener('DOMContentLoaded', cargarCarrito);
+    </script>
+</body>
+</html>
+
+            

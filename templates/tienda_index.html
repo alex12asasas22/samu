@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config.nombre }} - Tienda Online</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .producto-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .producto-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-agregar {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            transition: all 0.3s ease;
+        }
+        .btn-agregar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(238, 90, 36, 0.4);
+        }
+        .cart-badge {
+            animation: pulse 0.5s ease-in-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-store text-white text-2xl"></i>
+                    <h1 class="text-2xl font-bold text-white">{{ config.nombre }}</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="carrito-btn" class="relative bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span>Carrito</span>
+                        <span id="carrito-count" class="cart-badge bg-red-500 text-white text-xs rounded-full px-2 py-1 ml-2 hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-5xl font-bold mb-6">Productos Increíbles</h2>
+            <p class="text-xl mb-8 text-gray-200">Descubre nuestra selección premium de productos</p>
+            <div class="flex justify-center">
+                <div class="bg-white bg-opacity-20 rounded-lg p-6 backdrop-filter backdrop-blur-lg">
+                    <i class="fas fa-shipping-fast text-3xl mb-2"></i>
+                    <p class="text-sm">Envío rápido y seguro</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Productos -->
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <h3 class="text-3xl font-bold text-center mb-12 text-gray-800">Nuestros Productos</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {% for producto in productos %}
+                <div class="producto-card bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <div class="relative overflow-hidden">
+                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" 
+                             class="w-full h-64 object-cover transition-transform duration-300 hover:scale-110">
+                        <div class="absolute top-4 right-4 bg-{{ config.moneda == 'MXN' and 'green' or 'blue' }}-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            {{ producto.categoria }}
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="text-xl font-bold mb-3 text-gray-800">{{ producto.nombre }}</h4>
+                        <p class="text-gray-600 mb-4 text-sm leading-relaxed">{{ producto.descripcion }}</p>
+                        <div class="flex justify-between items-center">
+                            <div class="text-2xl font-bold text-green-600">
+                                ${{ "{:,.2f}".format(producto.precio) }} {{ config.moneda }}
+                            </div>
+                        </div>
+                        <button onclick="agregarAlCarrito({{ producto.id }})" 
+                                class="btn-agregar w-full mt-4 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center space-x-2">
+                            <i class="fas fa-cart-plus"></i>
+                            <span>Agregar al Carrito</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h5 class="text-xl font-bold mb-4">{{ config.nombre }}</h5>
+                    <p class="text-gray-400">Tu tienda online de confianza para productos de calidad premium.</p>
+                </div>
+                <div>
+                    <h5 class="text-xl font-bold mb-4">Contacto</h5>
+                    <p class="text-gray-400 flex items-center mb-2">
+                        <i class="fab fa-whatsapp mr-2"></i>
+                        {{ config.whatsapp }}
+                    </p>
+                </div>
+                <div>
+                    <h5 class="text-xl font-bold mb-4">Síguenos</h5>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-facebook text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-instagram text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-2xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 {{ config.nombre }}. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notificaciones -->
+    <div id="notification" class="fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fas fa-check-circle"></i>
+            <span id="notification-text">Producto agregado al carrito</span>
+        </div>
+    </div>
+
+    <script>
+        let carritoCount = 0;
+
+        // Función para mostrar notificaciones
+        function mostrarNotificacion(mensaje, tipo = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            
+            notificationText.textContent = mensaje;
+            notification.className = `fixed top-20 right-4 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+                tipo === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            
+            notification.style.transform = 'translateX(0)';
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+            }, 3000);
+        }
+
+        // Función para agregar producto al carrito
+        async function agregarAlCarrito(productoId) {
+            try {
+                const response = await fetch('/api/agregar-carrito', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        producto_id: productoId,
+                        cantidad: 1
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    carritoCount = data.carrito_items;
+                    actualizarContadorCarrito();
+                    mostrarNotificacion('¡Producto agregado al carrito!');
+                } else {
+                    mostrarNotificacion(data.error || 'Error al agregar producto', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión', 'error');
+            }
+        }
+
+        // Función para actualizar contador del carrito
+        function actualizarContadorCarrito() {
+            const countElement = document.getElementById('carrito-count');
+            if (carritoCount > 0) {
+                countElement.textContent = carritoCount;
+                countElement.classList.remove('hidden');
+            } else {
+                countElement.classList.add('hidden');
+            }
+        }
+
+        // Cargar datos del carrito al iniciar
+        async function cargarCarrito() {
+            try {
+                const response = await fetch('/api/carrito');
+                const data = await response.json();
+                carritoCount = data.count;
+                actualizarContadorCarrito();
+            } catch (error) {
+                console.error('Error al cargar carrito:', error);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('carrito-btn').addEventListener('click', () => {
+            window.location.href = '/carrito';
+        });
+
+        // Cargar carrito al iniciar la página
+        document.addEventListener('DOMContentLoaded', cargarCarrito);
+    </script>
+</body>
+</html>
